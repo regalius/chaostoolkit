@@ -4,6 +4,31 @@
 
 [Unreleased]: https://github.com/chaostoolkit/chaostoolkit/compare/1.4.1...HEAD
 
+### Added
+
+* Add the `--strategy` flag to the `run` command. It defines how the
+  steady-state hypothesis is applied. One of:
+  * `default` is the classic mode where the hypothesis is run before and after
+    the method
+  * `before-method-only` runs the hypothesis once only before the method
+  * `after-method-only` runs the hypothesis once only after the method. This is
+    useful when you know your environment is not in the appropriate state
+    before the conditions are applied
+  * `during-method-only` runs the hypothesis repeatedly during the method but
+    not before nor after
+  * `continously` runs the hypothesis repeatedly during the method as well as
+    before and after as usual
+* Add the `--hypothesis-frequency` flag to the `run` command. This flag is
+  only meaningful with `--strategy=during-method-only|continously`. It takes
+  a floating number indicating how many seconds to wait between two executions
+  of the hypothesis
+* Add the `--fail-fast` flag to the `run` command. This flag is
+  only meaningful with `--strategy=during-method-only|continously`. If set,
+  this indicates the experiment should be marked as deviating immediatly. When
+  not provided, the hypothesis runs until the end of the method without
+  terminating the experiment
+
+
 ## [1.4.1][] - 2020-02-20
 
 [1.4.1]: https://github.com/chaostoolkit/chaostoolkit/compare/1.4.0...1.4.1

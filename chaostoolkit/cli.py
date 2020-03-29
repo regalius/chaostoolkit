@@ -15,7 +15,8 @@ from chaoslib.loader import load_experiment
 from chaoslib.notification import notify, DiscoverFlowEvent, InitFlowEvent, \
     RunFlowEvent, ValidateFlowEvent
 from chaoslib.settings import load_settings, CHAOSTOOLKIT_CONFIG_PATH
-from chaoslib.types import Activity, Discovery, Experiment, Journal
+from chaoslib.types import Activity, Discovery, Experiment, Journal, \
+    Schedule, Strategy
 import click
 from click_plugins import with_plugins
 try:
@@ -89,11 +90,27 @@ def cli(ctx: click.Context, verbose: bool = False,
               help='Run the experiment without executing activities.')
 @click.option('--no-validation', is_flag=True,
               help='Do not validate the experiment before running.')
+@click.option('--strategy', default="default",
+              type=click.Choice([
+                  "default", "before-method-only", "after-method-only",
+                  "during-method-only", "continously"
+              ], case_sensitive=True),
+              help='Strategy to execute the hypothesis during the run.')
+@click.option('--hypothesis-frequency', default=1.0, type=float,
+              help='Pace at which running the hypothesis. '
+                   'Only applies when strategy is either: '
+                   'during-method-only or continously')
+@click.option('--fail-fast', is_flag=True, default=False,
+              help='When running in the during-method-onlyt or continous '
+                   'strategies, indicate the hypothesis can fail the '
+                   'experiment as soon as it deviates once. Otherwise, keeps '
+                   'running until the end of the experiment.')
 @click.argument('source')
 @click.pass_context
 def run(ctx: click.Context, source: str, journal_path: str = "./journal.json",
         dry: bool = False, no_validation: bool = False,
-        no_exit: bool = False) -> Journal:
+        no_exit: bool = False, strategy: str = "default",
+        hypothesis_frequency: float = 1.0, fail_fast: bool = False) -> Journal:
     """Run the experiment loaded from SOURCE, either a local file or a
        HTTP resource. SOURCE can be formatted as JSON or YAML."""
     settings = load_settings(ctx.obj["settings_path"]) or {}
@@ -121,8 +138,13 @@ def run(ctx: click.Context, source: str, journal_path: str = "./journal.json",
             ctx.exit(1)
 
     experiment["dry"] = dry
+    strategy = Strategy.from_string(strategy)
+    schedule = Schedule(
+        continous_hypothesis_frequency=hypothesis_frequency,
+        fail_fast=fail_fast)
 
-    journal = run_experiment(experiment, settings=settings)
+    journal = run_experiment(
+        experiment, settings=settings, strategy=strategy, schedule=schedule)
     has_deviated = journal.get("deviated", False)
     has_failed = journal["status"] != "completed"
 
