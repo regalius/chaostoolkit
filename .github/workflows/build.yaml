@@ -27,6 +27,7 @@ jobs:
         pycodestyle --first chaostoolkit
     - name: Run tests
       run: |
+        pip install -e .
         pytest tests/
 #    - name: Upload coverage to Codecov
 #      uses: codecov/codecov-action@v1
