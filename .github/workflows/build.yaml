@@ -27,7 +27,7 @@ jobs:
         pycodestyle --first chaostoolkit
     - name: Run tests
       run: |
-        pytest
+        pytest tests/
 #    - name: Upload coverage to Codecov
 #      uses: codecov/codecov-action@v1
 #      if: success() && (matrix.python-version == '3.5')
